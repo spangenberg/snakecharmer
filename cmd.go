@@ -1,6 +1,7 @@
 package snakecharmer
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
@@ -14,7 +15,10 @@ func Execute(cmd *cobra.Command) {
 	}
 }
 
-func ExecuteWithConfig(cmd *cobra.Command, configPath, prefix string, cfgFile *string, verbose *bool) {
+func ExecuteWithConfig(cmd *cobra.Command, configPath, prefix string) {
+	cfgFile := cmd.PersistentFlags().String("config", "", fmt.Sprintf("config file (default is %s/config.yaml)", configPath))
+	verbose := cmd.PersistentFlags().BoolP("verbose", "v", false, "Verbose output")
+
 	cobra.OnInitialize(initConfig(cmd, configPath, prefix, cfgFile, verbose))
 
 	Execute(cmd)
@@ -28,6 +32,7 @@ func HandleError(f func(cmd *cobra.Command, args []string) error) func(cmd *cobr
 		}
 	}
 }
+
 
 func Validate(f func(cmd *cobra.Command, args []string) (Config, error)) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
