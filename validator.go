@@ -15,26 +15,6 @@ type Config interface {
 	Defaults()
 }
 
-func validate(cfg Config) error {
-	cfg.Defaults()
-	v := validator.New()
-	trans, err := registerTranslations(cfg, v)
-	if err != nil {
-		return err
-	}
-	if err = v.Struct(cfg); err != nil {
-		if _, ok := err.(*validator.InvalidValidationError); ok {
-			return err
-		}
-		var fieldErrors []string
-		for _, fieldError := range err.(validator.ValidationErrors) {
-			fieldErrors = append(fieldErrors, "  "+fieldError.Translate(trans))
-		}
-		return fmt.Errorf("\n%s\n", strings.Join(unique(fieldErrors), "\n"))
-	}
-	return nil
-}
-
 type translation struct {
 	tag             string
 	translation     string
@@ -109,4 +89,24 @@ func unique(stringSlice []string) []string {
 		}
 	}
 	return list
+}
+
+func validate(cfg Config) error {
+	cfg.Defaults()
+	v := validator.New()
+	trans, err := registerTranslations(cfg, v)
+	if err != nil {
+		return err
+	}
+	if err = v.Struct(cfg); err != nil {
+		if _, ok := err.(*validator.InvalidValidationError); ok {
+			return err
+		}
+		var fieldErrors []string
+		for _, fieldError := range err.(validator.ValidationErrors) {
+			fieldErrors = append(fieldErrors, "  "+fieldError.Translate(trans))
+		}
+		return fmt.Errorf("\n%s\n", strings.Join(unique(fieldErrors), "\n"))
+	}
+	return nil
 }

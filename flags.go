@@ -19,15 +19,8 @@ var (
 	matchFirstCap = regexp.MustCompile("(.)([A-Z][a-z]+)")
 )
 
-type Flag struct {
-	Name  string
-	Value string
-	Usage string
-}
-
-func GenerateFlags(cmd *cobra.Command, cfg Config) *cobra.Command {
+func GenerateFlags(cmd *cobra.Command, cfg Config) {
 	parseFlags(cmd.Flags(), reflect.TypeOf(cfg).Elem(), "")
-	return cmd
 }
 
 func parseFlags(flags *pflag.FlagSet, r reflect.Type, path string) {
@@ -58,6 +51,9 @@ func parseFlags(flags *pflag.FlagSet, r reflect.Type, path string) {
 			name = kebabCase(name)
 			addFlag(flags, kind, value, name, shorthand, usage)
 			if err := viper.BindPFlag(key, flags.Lookup(name)); err != nil {
+				panic(err)
+			}
+			if err := viper.BindEnv(name); err != nil {
 				panic(err)
 			}
 		}
