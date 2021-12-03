@@ -33,17 +33,6 @@ func HandleError(f func(cmd *cobra.Command, args []string) error) func(cmd *cobr
 	}
 }
 
-
-func Validate(f func(cmd *cobra.Command, args []string) (Config, error)) func(cmd *cobra.Command, args []string) error {
-	return func(cmd *cobra.Command, args []string) error {
-		i, err := f(cmd, args)
-		if err != nil {
-			return err
-		}
-		return validate(i)
-	}
-}
-
 func initConfig(cmd *cobra.Command, configPath, prefix string, cfgFile *string, verbose *bool) func() {
 	return func() {
 		if *cfgFile != "" {

@@ -7,45 +7,40 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
 
-const tagName = "flag"
+const (
+	nameTageName     = "flag"
+	shorthandTagName = "flag-short"
+	valueTagName     = "flag-val"
+	usageTagName     = "flag-desc"
+)
 
 var (
 	matchAllCap   = regexp.MustCompile("([a-z0-9])([A-Z])")
 	matchFirstCap = regexp.MustCompile("(.)([A-Z][a-z]+)")
 )
 
-func GenerateFlags(cmd *cobra.Command, cfg Config) {
-	parseFlags(cmd.Flags(), reflect.TypeOf(cfg).Elem(), "")
+func GenerateFlags(flags *pflag.FlagSet, cfg Config) {
+	parseFlags(flags, reflect.TypeOf(cfg).Elem(), "")
 }
 
 func parseFlags(flags *pflag.FlagSet, r reflect.Type, path string) {
 	for i := 0; i < r.NumField(); i++ {
 		f := r.Field(i)
-		tag := f.Tag.Get(tagName)
-		if tag == "" || tag == "-" {
+		name := f.Tag.Get(nameTageName)
+		if name == "" || name == "-" {
 			continue
-		}
-		s := strings.Split(tag, ";")
-		var name, shorthand, value, usage string
-		switch len(s) {
-		case 4:
-			name, shorthand, value, usage = s[0], s[1], s[2], s[3]
-		case 3:
-			name, shorthand, value = s[0], s[1], s[2]
-		case 2:
-			name, shorthand = s[0], s[1]
-		case 1:
-			name = s[0]
 		}
 		kind := f.Type.Kind()
 		if kind == reflect.Struct {
 			parseFlags(flags, f.Type, buildKey(path, name))
 		} else {
+			shorthand := f.Tag.Get(shorthandTagName)
+			value := f.Tag.Get(valueTagName)
+			usage := f.Tag.Get(usageTagName)
 			key := buildKey(path, name)
 			name = strings.Replace(key, ".", "-", -1)
 			name = kebabCase(name)
@@ -224,14 +219,13 @@ func tagInformation(r reflect.Type, path []string, previous string) string {
 	if !ok {
 		panic(fmt.Sprintf("field %s not found", structField.Name))
 	}
-	tag := structField.Tag.Get(tagName)
-	s := strings.Split(tag, ";")
-	usage := kebabCase(s[0])
+	tag := structField.Tag.Get(nameTageName)
+	name := kebabCase(tag)
 	if previous != "" {
-		usage = previous+"-"+usage
+		name = previous + "-" + name
 	}
 	if len(path) > 1 {
-		return tagInformation(structField.Type, path[1:], usage)
+		return tagInformation(structField.Type, path[1:], name)
 	}
-	return usage
+	return name
 }

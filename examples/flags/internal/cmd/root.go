@@ -23,6 +23,6 @@ func NewCmdRoot() *cobra.Command {
 			cmd.Printf("%#v", cfg)
 		},
 	}
-	snakecharmer.GenerateFlags(cmd, cfg)
+	snakecharmer.GenerateFlags(cmd.Flags(), cfg)
 	return cmd
 }
